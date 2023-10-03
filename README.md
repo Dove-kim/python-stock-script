@@ -9,6 +9,17 @@
 
 ---
 # 필요한 데이터
-1. 단순 종가 이평선
-2. 지수 이평선
+1. PER, PSR, PBR, GP/A
+2. 소형주
 3. 돌파 여부
+
+---
+# 추가 목표
+1. Git에 올리는 소스니.. 알고리즘은 따로 메모장으로 만들고 숨길까..?
+
+--- 
+# 작동 방법
+1. 아나콘다를 32bit 환경으로  설치한다. 
+    - 1https://repo.anaconda.com/archive/ 에서 Anaconda3-2022.05-Windows-x86.exe로 설치한다.
+2. 3.10 버전의 python 환경을 만들고 
+```pip install pyqt5```로 설치
