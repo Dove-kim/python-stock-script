@@ -1,5 +1,6 @@
 import time
 
+import pandas as pd
 import datetime as dt
 from pykiwoom.kiwoom import *
 
@@ -27,7 +28,7 @@ def get_stock_info():
         count+=1
         print(f'{code_count}중 {count}')
         # 너무 많은 요청을 날리면 api 요청 제한에 걸림
-        time.sleep(0.3)
+        time.sleep(3.6)
         df = kiwoom.block_request("opt10001",
                                   종목코드=code,
                                   output="주식기본정보",
@@ -42,7 +43,7 @@ def get_stock_info():
             continue
         else:
             # 1년 전 가격을 가져 온다
-            time.sleep(0.3)
+            time.sleep(3.6)
             stock_price_df = kiwoom.block_request("opt10086",
                                  종목코드=df["종목코드"][0],
                                  조회일자= formatted_date,
@@ -60,7 +61,9 @@ def get_stock_info():
             # 사전화 한다.
             dict[code] = {
                 'code': df["종목코드"][0],
+                'name': stock_name,
                 'market_capitalization': float(df['시가총액'][0]),
+                'net_profit': df['당기순이익'],
                 'PER': float(df["PER"][0]),
                 'PBR': float(df["PBR"][0]),
                 'PSR': float(df['시가총액'][0]) / float(df['매출액'][0]),
@@ -71,5 +74,21 @@ def get_stock_info():
 kiwoom = Kiwoom()
 kiwoom.CommConnect(block=True)
 
-data = get_stock_info()
+dict_data = get_stock_info()
+
+# market_capitalization 값으로 정렬
+dict_data.sort(key=lambda x: x["market_capitalization"])
+
+# 하위 20%의 데이터 개수 계산
+total_items = len(dict_data)
+num_items_to_keep = total_items // 5  # 하위 20%는 전체의 20%이므로 // 연산자를 사용
+
+# 하위 20% 데이터만 남기기
+filtered_data = dict_data[:num_items_to_keep]
+
+df = pd.DataFrame(data=dict_data, index=[0])
+df = (df.T)
+print (df)
+
+df.to_excel(f'{dt.datetime.now().strftime("%Y-%m-%d")}.xlsx')
 
