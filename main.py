@@ -113,16 +113,6 @@ kiwoom.CommConnect(block=True)
 
 dict_data = get_stock_info(code_list)
 
-# market_capitalization 값으로 정렬
-dict_data.sort(key=lambda x: x["market_capitalization"])
-
-# 하위 20%의 데이터 개수 계산
-total_items = len(dict_data)
-num_items_to_keep = total_items // 5  # 하위 20%는 전체의 20%이므로 // 연산자를 사용
-
-# 하위 20% 데이터만 남기기
-filtered_data = dict_data[:num_items_to_keep]
-
 df = pd.DataFrame(data=dict_data, index=[0])
 df = (df.T)
 print(df)
