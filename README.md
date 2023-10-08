@@ -20,5 +20,6 @@
 # 작동 방법
 1. 아나콘다를 32bit 환경으로  설치한다. 
     - 1https://repo.anaconda.com/archive/ 에서 Anaconda3-2022.05-Windows-x86.exe로 설치한다.
-2. 3.10 버전의 python 환경을 만들고 
+2. `3.10` 버전의 python 환경을 만들고 
 ```pip install pyqt5```로 설치
+3. ```python main.py [파일 경로]``` : 파일경로에는 주식 종목 코드가 `\n` 구분자로 저장된 txt 파일이 있어야함. 
