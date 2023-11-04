@@ -86,6 +86,9 @@ def get_stock_info(code_list):
             if stock_price_df['시가'][0] == '':
                 continue
 
+            if '057030' == df["종목코드"][0]:
+                print()
+
             start_price_1prev = abs(int(stock_price_df['시가'][0]))
 
             # 1년 시가보다 현재 가격이 큰 종목만 추린다.
@@ -107,7 +110,7 @@ def get_stock_info(code_list):
             sales, cost_of_goods_sold, total_asset, cash_flows_from_operating = get_company_financial_statement(dart_company_code,api_key)
 
             # 영업흐름이 음수면 패쓰
-            if cash_flows_from_operating <= 0:
+            if cash_flows_from_operating < 0:
                 continue
 
             # 사전화 한다.
