@@ -83,13 +83,13 @@ def get_company_financial_statement(code: str, crtfc_key: str):
             total_asset = 0
             cash_flows_from_operating = 0
             for dict in result['list']:
-                if dict['account_nm'] == '수익(매출액)':
+                if dict['account_nm'] == '수익(매출액)' and dict['thstrm_add_amount'] != '':
                     sales = float(dict['thstrm_add_amount'])
-                if dict['account_nm'] == '매출원가':
+                if dict['account_nm'] == '매출원가' and dict['thstrm_add_amount'] != '':
                     cost_of_goods_sold = float(dict['thstrm_add_amount'])
-                if dict['account_nm'] == '자산총계':
+                if dict['account_nm'] == '자산총계' and dict['thstrm_amount'] != '':
                     total_asset = float(dict['thstrm_amount'])
-                if dict['account_nm'] == '영업활동현금흐름':
+                if dict['account_nm'] == '영업활동현금흐름' and dict['thstrm_amount'] != '':
                     cash_flows_from_operating = float(dict['thstrm_amount'])
 
             return sales, cost_of_goods_sold, total_asset, cash_flows_from_operating
