@@ -1,9 +1,6 @@
-import time
-import sys
-
-import openpyxl
-import pandas as pd
 import datetime as dt
+import time
+from dart import *
 from pykiwoom.kiwoom import *
 
 
@@ -26,6 +23,12 @@ def read_stock_codes_from_file(file_path):
 
 
 def get_stock_info(code_list):
+    # Dart 공시 사이트에서 사용할 키를 가져온다.
+    api_key = get_dart_key("dart.credential")
+
+    # Dart 공시 사이트에서 기업들 정보를 가져온다.
+    company_df = get_company_info(api_key)
+
     api_call_count = len(code_list) * 2
 
     # 키움 증권 API는 1시간에 1000개 만 api 요청 가능
@@ -94,6 +97,19 @@ def get_stock_info(code_list):
             if int(df['당기순이익'][0]) < 0:
                 continue
 
+            # Dart에서 사용할 기업 코드 조회
+            dart_company_code= company_df[company_df['stock_code'] == df["종목코드"][0]].corp_code.values[0]
+
+            # 증가 이력이 있다면 패쓰
+            if is_company_issue_new_stock(dart_company_code,api_key):
+                continue
+
+            sales, cost_of_goods_sold, total_asset, cash_flows_from_operating = get_company_financial_statement(dart_company_code,api_key)
+
+            # 영업흐름이 음수면 패쓰
+            if cash_flows_from_operating <= 0:
+                continue
+
             # 사전화 한다.
             dict[code] = {
                 '종목 코드': df["종목코드"][0],
@@ -103,7 +119,10 @@ def get_stock_info(code_list):
                 'PER': float(df["PER"][0]),
                 'PBR': float(df["PBR"][0]),
                 'PSR': float(df['시가총액'][0]) / float(df['매출액'][0]),
-                'GP/A': 0,  # =(J2-K2)/L2
+                '매출액': sales,
+                '매출원가': cost_of_goods_sold,
+                '총자산': total_asset,
+                'GP/A': 0,  # =(I2-J2)/K2
                 'PER 순위': 0,  # =RANK(F2,F:F,1)
                 'PBR 순위': 0,  # =RANK(G2,G:G,1)
                 'PSR 순위': 0,  # =RANK(H2,H:H,1)
@@ -112,7 +131,6 @@ def get_stock_info(code_list):
                 '현재가': current_price,
             }
     return dict
-
 
 # 외부에서 종목 코드 txt 파일을 읽는다.
 if len(sys.argv) != 2:
