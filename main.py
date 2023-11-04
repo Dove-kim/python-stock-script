@@ -1,6 +1,7 @@
 import time
 import sys
 
+import openpyxl
 import pandas as pd
 import datetime as dt
 from pykiwoom.kiwoom import *
@@ -53,6 +54,7 @@ def get_stock_info(code_list):
             time.sleep(60)
 
         print(f'{code_count}중 {count}')
+
         # 너무 많은 요청을 날리면 api 요청 제한에 걸림
         time.sleep(delay_time)
         df = kiwoom.block_request("opt10001",
@@ -77,6 +79,10 @@ def get_stock_info(code_list):
                                                   output="일별주가",
                                                   next=0)
 
+            # 1년전 가격이 없으면, 패쓰
+            if stock_price_df['시가'][0] == '':
+                continue
+
             start_price_1prev = abs(int(stock_price_df['시가'][0]))
 
             # 1년 시가보다 현재 가격이 큰 종목만 추린다.
@@ -84,17 +90,27 @@ def get_stock_info(code_list):
             if current_price < start_price_1prev:
                 continue
 
+            # 당기순이익이 0미만은 패쓰
+            if int(df['당기순이익'][0]) < 0:
+                continue
+
             # 사전화 한다.
             dict[code] = {
-                'code': df["종목코드"][0],
-                'name': stock_name,
-                'market_capitalization': float(df['시가총액'][0]),
-                'net_profit': df['당기순이익'],
+                '종목 코드': df["종목코드"][0],
+                '종목 명': stock_name,
+                '시가 총액': float(df['시가총액'][0]),
+                '당기 순 이익': float(df['당기순이익'][0]),
                 'PER': float(df["PER"][0]),
                 'PBR': float(df["PBR"][0]),
                 'PSR': float(df['시가총액'][0]) / float(df['매출액'][0]),
+                'GP/A': 0,  # =(J2-K2)/L2
+                'PER 순위': 0,  # =RANK(F2,F:F,1)
+                'PBR 순위': 0,  # =RANK(G2,G:G,1)
+                'PSR 순위': 0,  # =RANK(H2,H:H,1)
+                'GP/A 순위': 0,  # =RANK(L2,L:L,0)
+                '종합 순위': 0,  # =SUM(M2:P2)/4
+                '현재가': current_price,
             }
-
     return dict
 
 
@@ -113,8 +129,8 @@ kiwoom.CommConnect(block=True)
 
 dict_data = get_stock_info(code_list)
 
-df = pd.DataFrame(data=dict_data, index=[0])
-df = (df.T)
+# dict_data를 DataFrame으로 변환
+df = pd.DataFrame.from_dict(dict_data, orient='index')
 print(df)
 
 df.to_excel(f'{dt.datetime.now().strftime("%Y-%m-%d")}.xlsx')
