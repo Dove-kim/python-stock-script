@@ -86,9 +86,6 @@ def get_stock_info(code_list):
             if stock_price_df['시가'][0] == '':
                 continue
 
-            if '057030' == df["종목코드"][0]:
-                print()
-
             start_price_1prev = abs(int(stock_price_df['시가'][0]))
 
             # 1년 시가보다 현재 가격이 큰 종목만 추린다.
@@ -101,7 +98,7 @@ def get_stock_info(code_list):
                 continue
 
             # Dart에서 사용할 기업 코드 조회
-            dart_company_code= company_df[company_df['stock_code'] == df["종목코드"][0]].corp_code.values[0]
+            dart_company_code = company_df[company_df['stock_code'] == df["종목코드"][0]].corp_code.values[0]
 
             # 증가 이력이 있다면 패쓰
             if is_company_issue_new_stock(dart_company_code,api_key):

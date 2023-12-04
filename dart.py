@@ -69,8 +69,12 @@ def get_lastest_company_financial_statement(code: str, crtfc_key: str):
     report_type = ['11011', '11014', '11012', '11013']
     today = datetime.now()
 
+    if '00177320' == code:
+        print()
+
     report_code = ''
     sale = 0
+    did_get_any_data = False
     # 올해 모든 보고서를 조회한다.
     for r_type in report_type:
         response = requests.get(api, params={
@@ -83,9 +87,10 @@ def get_lastest_company_financial_statement(code: str, crtfc_key: str):
         result = response.json()
         status = result['status']
         if status == '000':
+            did_get_any_data = True
             tmp_sales = 0
             for dict in result['list']:
-                if dict['account_nm'] in sales_name and dict['thstrm_add_amount'] != '':
+                if dict['account_nm'] in sales_name:
                     if dict['thstrm_add_amount'] != '':
                         tmp_sales = float(dict['thstrm_add_amount'])
                     if dict['thstrm_amount'] != '' and tmp_sales == 0:
@@ -93,36 +98,20 @@ def get_lastest_company_financial_statement(code: str, crtfc_key: str):
             if tmp_sales > sale:
                 sale = tmp_sales
                 report_code = r_type
-                    
-    if sale > 0:
+
+    # 재무 정보가 있으며, 매출 정보가 있을경우
+    if did_get_any_data and sale > 0:
         return report_code, today.strftime("%Y")
-            
-    # sale가 0이라면 전년도로 다시 조회한다.
-    last_year = today - timedelta(days=365)
-    
-    for r_type in report_type:
-        response = requests.get(api, params={
-            'crtfc_key': crtfc_key,
-            'corp_code': code,
-            'bsns_year': last_year.strftime("%Y"),
-            'fs_div': 'OFS',
-            'reprt_code': r_type
-        })
-        result = response.json()
-        status = result['status']
-        if status == '000':
-            tmp_sales = 0
-            for dict in result['list']:
-                if dict['account_nm'] in sales_name and dict['thstrm_add_amount'] != '':
-                    if dict['thstrm_add_amount'] != '':
-                        tmp_sales = float(dict['thstrm_add_amount'])
-                    if dict['thstrm_amount'] != '' and tmp_sales == 0:
-                        tmp_sales = float(dict['thstrm_amount'])
-            if tmp_sales > sale:
-                sale = tmp_sales
-                report_code = r_type
-    return report_code, today.strftime("%Y")
-        
+
+    # 재무 정보가 있으며, 매출 정보가 없을 경우
+    if did_get_any_data and sale == 0:
+        return '', ''
+
+    # 재무 정보가 없을 경우
+    if not did_get_any_data:
+        last_year = today - timedelta(days=365)
+        return '11011', last_year.strftime("%Y")
+
 
 # 회사의 재무정보를 가져온다.
 def get_company_financial_statement(code: str, crtfc_key: str):
